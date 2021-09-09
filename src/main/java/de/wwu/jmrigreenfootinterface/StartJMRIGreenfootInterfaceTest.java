@@ -19,16 +19,16 @@ public class StartJMRIGreenfootInterfaceTest {
 		
 		// Turnout state change test
 		
-//		GreenfootTestTurnout to = new GreenfootTestTurnout("ITabc123");
-//		System.out.println(to.getState());
-//		
-//		to.setState(TurnoutState.CLOSED);
-//		System.out.println(to.getState());
-//		
-//		try { Thread.sleep(2000); } catch (InterruptedException e) {}
-//		
-//		to.setState(TurnoutState.THROWN);
-//		System.out.println(to.getState());
+		GreenfootTestTurnout to = new GreenfootTestTurnout("ITabc123");
+		System.out.println(to.getState());
+		
+		to.setState(TurnoutState.CLOSED);
+		System.out.println(to.getState());
+		
+		try { Thread.sleep(2000); } catch (InterruptedException e) {}
+		
+		to.setState(TurnoutState.THROWN);
+		System.out.println(to.getState());
 		
 	}
 

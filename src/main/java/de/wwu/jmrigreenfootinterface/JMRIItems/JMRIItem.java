@@ -1,5 +1,6 @@
 package de.wwu.jmrigreenfootinterface.JMRIItems;
 
+import de.wwu.jmrigreenfootinterface.JMRI;
 import de.wwu.jmrigreenfootinterface.net.JMRIInterface;
 
 public abstract class JMRIItem {
@@ -11,7 +12,7 @@ public abstract class JMRIItem {
 	public JMRIItem(String name) {
 		this.name = name;
 		
-		jmriInterface = JMRI.getInstance().getInterface();
+		jmriInterface = JMRI.getInterface();
 	}
 	
 	public String getName() {
