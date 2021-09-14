@@ -1,7 +1,7 @@
 import greenfoot.*;  // (World, Actor, GreenfootImage, Greenfoot and MouseInfo)
 import de.wwu.jmrigreenfootinterface.*;
 import de.wwu.jmrigreenfootinterface.net.*;
-import de.wwu.jmrigreenfootinterface.JMRIItems.*;
+import de.wwu.jmrigreenfootinterface.items.*;
 
 /**
  * Repräsentiert eine Weiche, d.h. eine besondere Art von Track. Diese Klasse ist abstrakt,
