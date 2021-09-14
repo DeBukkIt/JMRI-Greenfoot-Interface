@@ -1,4 +1,4 @@
-package de.wwu.jmrigreenfootinterface.JMRIItems;
+package de.wwu.jmrigreenfootinterface.items;
 
 public abstract class JMRITurnout extends JMRIItem {
 

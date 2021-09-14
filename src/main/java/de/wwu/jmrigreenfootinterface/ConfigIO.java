@@ -64,5 +64,9 @@ public class ConfigIO {
 	public void set(String key, Object obj) {
 		configJsonObject.put(key, obj);
 	}
+	
+	public void remove(String key) {
+		configJsonObject.remove(key);
+	}
 
 }

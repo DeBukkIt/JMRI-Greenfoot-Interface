@@ -1,4 +1,4 @@
-package de.wwu.jmrigreenfootinterface.net;
+package de.wwu.jmrigreenfootinterface;
 
 import java.io.IOException;
 
@@ -6,7 +6,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import de.wwu.jmrigreenfootinterface.ConfigIO;
+import de.wwu.jmrigreenfootinterface.net.WebSocketClient;
 
 public class JMRIInterfaceImplementation implements JMRIInterface {
 

@@ -1,7 +1,7 @@
-package de.wwu.jmrigreenfootinterface.JMRIItems;
+package de.wwu.jmrigreenfootinterface.items;
 
 import de.wwu.jmrigreenfootinterface.JMRI;
-import de.wwu.jmrigreenfootinterface.net.JMRIInterface;
+import de.wwu.jmrigreenfootinterface.JMRIInterface;
 
 public abstract class JMRIItem {
 	

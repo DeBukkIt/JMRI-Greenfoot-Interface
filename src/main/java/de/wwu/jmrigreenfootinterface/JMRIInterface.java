@@ -1,4 +1,4 @@
-package de.wwu.jmrigreenfootinterface.net;
+package de.wwu.jmrigreenfootinterface;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
