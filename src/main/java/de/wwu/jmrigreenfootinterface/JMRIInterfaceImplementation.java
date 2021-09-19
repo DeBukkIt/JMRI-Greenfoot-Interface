@@ -1,39 +1,54 @@
 package de.wwu.jmrigreenfootinterface;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import de.wwu.jmrigreenfootinterface.items.MovingDirection;
 import de.wwu.jmrigreenfootinterface.net.WebSocketClient;
+import de.wwu.jmrigreenfootinterface.net.WiThrottleClient;
 
 public class JMRIInterfaceImplementation implements JMRIInterface {
 
-	public static String SERVER_HOST;
-	public static String SERVER_PORT;
+	public static String WEBSERVER_HOST;
+	public static String WEBSERVER_PORT;
 	
-	private WebSocketClient client;
+	public static String WITHROTTLESERVER_HOST;
+	public static String WITHROTTLESERVER_PORT;
+	
+	private WebSocketClient webClient;
+	private WiThrottleClient throttleClient;
 	
 	public JMRIInterfaceImplementation() {
 		loadNetworkConfig();
 		
-		client = new WebSocketClient(SERVER_HOST, SERVER_PORT);
+		webClient = new WebSocketClient(WEBSERVER_HOST, WEBSERVER_PORT);
+		throttleClient = new WiThrottleClient(WITHROTTLESERVER_HOST, WITHROTTLESERVER_PORT);
 	}
 	
 	private void loadNetworkConfig() {
 		JSONObject networkConfig = (JSONObject) ConfigIO.getInstance().get("network");
-		SERVER_HOST = networkConfig.getString("host");
-		SERVER_PORT = networkConfig.getString("port");
+		JSONObject webserverConfig = networkConfig.getJSONObject("webserver");
+		JSONObject withrottleConfig = networkConfig.getJSONObject("withrottleserver");
 		
-		System.out.println("Host is " + SERVER_HOST);
-		System.out.println("Port is " + SERVER_PORT + "\n");
+		WEBSERVER_HOST = webserverConfig.getString("host");
+		WEBSERVER_PORT = webserverConfig.getString("port");
+		WITHROTTLESERVER_HOST = withrottleConfig.getString("host");
+		WITHROTTLESERVER_PORT = withrottleConfig.getString("port");
+		
+		System.out.println("WebServer config is " + WEBSERVER_HOST + ":" + WEBSERVER_PORT);
+		System.out.println("WiThrottle server config is " + WITHROTTLESERVER_HOST + ":" + WITHROTTLESERVER_PORT);
 	}
+	
+	// ============ JMRI json functions section ============
 	
 	@Override
 	public JSONArray listTypes() {
 		try {
-			String response = client.doRequest("GET", "type", "");
+			String response = webClient.doRequest("GET", "type", "");
 			if(response != null) {
 				return new JSONArray(response);
 			}
@@ -46,7 +61,7 @@ public class JMRIInterfaceImplementation implements JMRIInterface {
 	@Override
 	public JSONArray getType(String type) {
 		try {
-			String response = client.doRequest("GET", type, "");
+			String response = webClient.doRequest("GET", type, "");
 			if(response != null) {
 				return new JSONArray(response);
 			}
@@ -59,7 +74,7 @@ public class JMRIInterfaceImplementation implements JMRIInterface {
 	@Override
 	public JSONObject getItem(String type, String itemName) {
 		try {
-			String response = client.doRequest("GET", type + "/" + itemName, "");
+			String response = webClient.doRequest("GET", type + "/" + itemName, "");
 			if(response != null) {
 				return new JSONObject(response);
 			}
@@ -78,7 +93,7 @@ public class JMRIInterfaceImplementation implements JMRIInterface {
 
 	private boolean setPropertyString(String type, String itemName, String propertyName, String value) {
 		try {
-			client.doRequest("POST", type + "/" + itemName, "{\"" + propertyName + "\":\"" + String.valueOf(value) + "\"}");
+			webClient.doRequest("POST", type + "/" + itemName, "{\"" + propertyName + "\":\"" + String.valueOf(value) + "\"}");
 			return getProperty(type, itemName, propertyName).equals(value);
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -94,12 +109,116 @@ public class JMRIInterfaceImplementation implements JMRIInterface {
 		}
 		
 		try {
-			client.doRequest("POST", type + "/" + itemName, "{\"" + propertyName + "\":" + String.valueOf(value) + "}");
+			webClient.doRequest("POST", type + "/" + itemName, "{\"" + propertyName + "\":" + String.valueOf(value) + "}");
 			return getProperty(type, itemName, propertyName).equals(value);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		return false;
+	}
+	
+	// ============ JMRI WiThrottle functions section ============
+
+	private final String THROTTLE_ID = "T"; 
+	
+	@Override
+	public void addLocomotive(String locomotiveReference, String address) {
+		sendCommand("+", locomotiveReference, "<;>", address);
+	}
+
+	@Override
+	public void removeLocomotive(String locomotiveReference) {
+		sendCommand("-", locomotiveReference, "<;>", "r");
+	}
+
+	@Override
+	public void removeAllLocomotives() {
+		removeLocomotive("*");
+	}
+
+	@Override
+	public void setFunctionKeyPressed(String locomotiveReference, int functionKeyNumber, boolean pressed) {
+		sendCommand("A", locomotiveReference, "<;>", "F", pressed ? "1" : "0", String.valueOf(functionKeyNumber));
+	}
+
+	@Override
+	public void setFunctionKeyLocking(String locomotiveReference, int functionKeyNumber, boolean locking) {
+		sendCommand("A", locomotiveReference, "<;>", "m", locking ? "1" : "0", String.valueOf(functionKeyNumber));		
+	}
+
+	@Override
+	public void setMovingDirection(String locomotiveReference, MovingDirection movingDirection) {
+		sendCommand("A", locomotiveReference, "<;>", "R", movingDirection == MovingDirection.FORWARD ? "1" : "0");
+	}
+
+	@Override
+	public void setSpeed(String locomotiveReference, int speed) {
+		sendCommand("A", locomotiveReference, "<;>", "V", String.valueOf(speed));
+	}
+
+	@Override
+	public MovingDirection getMovingDirection(String locomotiveReference) {
+		String[] queryResult = sendCommand("A", locomotiveReference, "<;>", "qR");
+		String result = findMessageByPrefix(queryResult, "M" + THROTTLE_ID + "A" + locomotiveReference + "<;>R");
+		result = result.substring(result.length() - 1);
+		return result.equals("0") ? MovingDirection.REVERSE : MovingDirection.FORWARD;
+	}
+
+	@Override
+	public int getSpeed(String locomotiveReference) {
+		// query current speed of the locomotive
+		String[] queryResult = sendCommand("A", locomotiveReference, "<;>", "qV");
+		String result = findMessageByPrefix(queryResult, "M" + THROTTLE_ID + "A" + locomotiveReference + "<;>V");
+		// in case an error occured during query, return -1
+		if(result == null) {
+			return -1;
+		}
+		// else return the result as integer
+		result = result.substring(result.indexOf("<;>V") + 4);
+		return Integer.valueOf(result);
+	}
+
+	@Override
+	public void doEmergencyStop(String locomotiveReference) {
+		sendCommand("A", locomotiveReference, "<;>", "X");
+	}
+	
+	private String[] sendCommand(String... commandStrings) {
+		StringBuilder builder = new StringBuilder();
+		for(String s : commandStrings) {
+			builder.append(s);
+		}
+		try {
+//			throttleClient.send("M" + THROTTLE_ID + builder.toString());
+//			return throttleClient.receive();
+			
+			// \/ BEGIN OF DEBUG \/
+			String cmd = "M" + THROTTLE_ID + builder.toString();
+			System.out.println("\n>>" + cmd);
+			throttleClient.send(cmd);
+			String debugStrings[] = throttleClient.receive();
+			System.out.println("<< " + Arrays.toString(debugStrings) + "\n");
+			return debugStrings;
+			// ^^ END OF DEBUG ^^
+			
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
+	private String findMessageByPrefix(String[] serverMessages, String prefix) {
+		if(serverMessages == null) {
+			return null;
+		}
+		
+		// find prefix in all messages and return line
+		for(String s : serverMessages) {
+			if(s.startsWith(prefix)) {
+				return s;
+			}
+		}
+		return null;
 	}
 
 }

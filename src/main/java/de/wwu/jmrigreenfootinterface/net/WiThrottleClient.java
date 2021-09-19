@@ -11,6 +11,7 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.UUID;
 
 public class WiThrottleClient {
@@ -21,6 +22,7 @@ public class WiThrottleClient {
 	private String clientName;
 	private UUID clientUuid;
 			
+	private Thread heartbeatThread;
 	private boolean heartActive;
 	private int heartBeatRate;
 	
@@ -33,6 +35,10 @@ public class WiThrottleClient {
 		this.port = port;
 		this.clientName = clientName;
 		this.clientUuid = UUID.randomUUID();
+	}
+	
+	public WiThrottleClient(String host, String port) {
+		this(host, port, "WiThrottle Device #" + new Random().nextInt(9999));
 	}
 
 	public void connect() throws IOException {		
@@ -54,6 +60,45 @@ public class WiThrottleClient {
 		// send this client's unique ID
 		send("HU" + clientUuid);
 		receive();
+	}
+
+	private void maintainConnection() throws IOException {
+		if(socket != null) {
+			if(!socket.isConnected() || socket.isClosed()) {
+				connect();
+			}
+		} else {
+			connect();
+		}
+	}
+	
+	public void disconnect() throws IOException {
+		// stop heartbeat sender
+		stopHeart();
+		
+		// make sure connection is still alive
+		maintainConnection();
+		
+		// send QUIT command
+		send("Q");
+		receive();
+		
+		// close streams and socket
+		try {
+			outputStream.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		try {
+			inputStream.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		try {
+			socket.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 	
 	public String[] receive() throws IOException {
@@ -84,7 +129,11 @@ public class WiThrottleClient {
 		bw.flush();
 	}
 	
-	public void startHeart(String[] welcomeMsgLines) {
+	public void sendHeartBeat() throws IOException {
+		send("*");
+	}
+	
+	private void startHeart(String[] welcomeMsgLines) {
 		for(int i = welcomeMsgLines.length - 1; i >= 0; i--) {
 			String line = welcomeMsgLines[i];
 			if(line.startsWith("*")) {
@@ -92,13 +141,25 @@ public class WiThrottleClient {
 				break;
 			}
 		}
+		
+		if(heartBeatRate <= 0) {
+			heartBeatRate = 10;
+		}
+		
 		startHeart(heartBeatRate - 1);
 	}
 	
-	public void startHeart(int interval) {
+	private void startHeart(int interval) {
 		heartActive = true;
 		
-		new Thread(() -> {
+		// prevent a second heartbeat sender to start
+		if(heartbeatThread != null && heartbeatThread.isAlive()) {
+			return;
+		}
+		
+		// create heartbeat sender on a separate thread
+		heartbeatThread = new Thread(() -> {
+			System.out.println("Heartbeat sender started @ 1 beat per " + interval + " seconds");
 			while(heartActive) {
 				try {
 					// send heartbeat
@@ -111,21 +172,13 @@ public class WiThrottleClient {
 					e.printStackTrace();
 				}
 			}
-		}).start();
+		});
+		// start heartbeating
+		heartbeatThread.start();
 	}
 	
-	public void stopHeart() {
+	private void stopHeart() {
 		heartActive = false;
-	}
-	
-	public void sendHeartBeat() throws IOException {
-		send("*");
-	}
-
-	private void maintainConnection() throws IOException {
-		if(!socket.isConnected() || socket.isClosed()) {
-			connect();
-		}
 	}
 	
 }
