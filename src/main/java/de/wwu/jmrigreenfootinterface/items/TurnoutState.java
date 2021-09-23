@@ -2,7 +2,7 @@ package de.wwu.jmrigreenfootinterface.items;
 
 public enum TurnoutState {
 
-	THROWN(4), CLOSED(2);
+	THROWN(4), CLOSED(2), UNKNOWN(1);
 	
 	private int stateCode;
 	
@@ -12,6 +12,15 @@ public enum TurnoutState {
 	
 	public int getStateCode() {
 		return stateCode;
+	}
+	
+	public TurnoutState fromCode(int code) {
+		for(TurnoutState currentState : values()) {
+			if(currentState.getStateCode() == code) {
+				return currentState;
+			}
+		}
+		return null;
 	}
 	
 }
