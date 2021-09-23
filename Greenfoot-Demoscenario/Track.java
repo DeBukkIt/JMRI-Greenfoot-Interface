@@ -1,4 +1,5 @@
 import greenfoot.*;  // (World, Actor, GreenfootImage, Greenfoot und MouseInfo)
+import de.wwu.jmrigreenfootinterface.*;
 
 /**
  * Gepräsentiert ein Stück Gleis
@@ -8,16 +9,38 @@ import greenfoot.*;  // (World, Actor, GreenfootImage, Greenfoot und MouseInfo)
  */
 public abstract class Track extends Actor
 {   
-    protected String layoutBlockId;    
+    protected String layoutBlockId = "";
+    protected String imageBaseName = "";
     
-    public Track() {
-        this.layoutBlockId = null;
+    public Track(String imageBaseName) {
+        this(imageBaseName, null);
     }
     
-    public Track(String layoutBlockId) {
+    public Track(String imageBaseName, String layoutBlockId) {
+        this.imageBaseName = imageBaseName;
         this.layoutBlockId = layoutBlockId;
     }
+    
+    public void setLayoutBlock(String layoutBlockId) {
+        this.layoutBlockId = layoutBlockId;
+    }
+    
+    protected boolean isBlockActive() {
+        if(layoutBlockId == null || layoutBlockId.isEmpty()) {
+            return false;
+        }
         
+        int result = (int) JMRI.getInterface().getProperty("layoutBlocks", layoutBlockId, "state");
+        return result == 2 ? true : false;
+    }
+    
+    public abstract void updateImage();
+    
+    @Override
+    protected void addedToWorld(World world) {
+        updateImage();
+    }
+    
     /**
      * Diese Methode wird vom Greenfoot-Framework aufgerufen, um Actors die Möglichkeit
      * zu geben, eine Aktion auszuführen. Bei jedem Aktionsschritt in der Umgebung wird die

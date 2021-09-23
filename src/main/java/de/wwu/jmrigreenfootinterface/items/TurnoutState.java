@@ -14,7 +14,7 @@ public enum TurnoutState {
 		return stateCode;
 	}
 	
-	public TurnoutState fromCode(int code) {
+	public static TurnoutState fromCode(int code) {
 		for(TurnoutState currentState : values()) {
 			if(currentState.getStateCode() == code) {
 				return currentState;

@@ -28,8 +28,8 @@ public class PanelWorld extends World
             Actor focusedActor = Greenfoot.getMouseInfo().getActor();
             if(Greenfoot.mousePressed(focusedActor)) {
                 if(focusedActor != null && focusedActor instanceof Turnout) {
-                    Switch clickedSwitch = (Switch) focusedActor;
-                    clickedSwitch.toggleSwitched();
+                    Turnout clickedSwitch = (Turnout) focusedActor;
+                    clickedSwitch.toggleState();
                 }
             }
         }
