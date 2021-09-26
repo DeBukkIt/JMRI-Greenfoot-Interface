@@ -182,6 +182,15 @@ public class JMRIInterfaceImplementation implements JMRIInterface {
 	public void doEmergencyStop(String locomotiveReference) {
 		sendCommand("A", locomotiveReference, "<;>", "X");
 	}
+
+	@Override
+	public void invertMovingDirection(String locomotiveReference) {
+		int oldSpeed = getSpeed(locomotiveReference);
+		doEmergencyStop(locomotiveReference);
+		MovingDirection oldDirection = getMovingDirection(locomotiveReference);
+		setMovingDirection(locomotiveReference, oldDirection == MovingDirection.FORWARD ? MovingDirection.REVERSE : MovingDirection.FORWARD);
+		setSpeed(locomotiveReference, oldSpeed);
+	}
 	
 	private String[] sendCommand(String... commandStrings) {
 		StringBuilder builder = new StringBuilder();

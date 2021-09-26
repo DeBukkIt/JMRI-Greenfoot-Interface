@@ -37,6 +37,8 @@ public interface JMRIInterface {
 	
 	public MovingDirection getMovingDirection(String locomotiveReference);
 	
+	public void invertMovingDirection(String locomotiveReference);
+	
 	public int getSpeed(String locomotiveReference);
 	
 	public void doEmergencyStop(String locomotiveReference);
