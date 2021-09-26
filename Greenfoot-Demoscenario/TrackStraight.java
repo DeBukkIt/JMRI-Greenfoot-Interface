@@ -7,8 +7,7 @@ import greenfoot.*;  // (World, Actor, GreenfootImage, Greenfoot und MouseInfo)
  * @version 1.0.0
  */
 public class TrackStraight extends Track
-{
-    
+{    
     public TrackStraight(StraightType straightType, String layoutBlockId) {
         super(straightType.getImageBaseName(), layoutBlockId);
     }
