@@ -10,6 +10,8 @@ import de.wwu.jmrigreenfootinterface.items.*;
 public class PanelWorld extends World
 {
     
+    int tickCounter = -1;
+    
     /**
      * Konstruktor für Objekte der Klasse PanelWorld
      * 
@@ -37,12 +39,24 @@ public class PanelWorld extends World
         if(Greenfoot.getMouseInfo() != null) {
             Actor focusedActor = Greenfoot.getMouseInfo().getActor();
             if(Greenfoot.mousePressed(focusedActor)) {
-                if(focusedActor != null && focusedActor instanceof Turnout) {
-                    Turnout clickedSwitch = (Turnout) focusedActor;
-                    clickedSwitch.toggleState();
-                    clickedSwitch.updateImage();
+                if(focusedActor != null) {
+                    if(focusedActor instanceof Turnout) {
+                        Turnout clickedSwitch = (Turnout) focusedActor;
+                        clickedSwitch.toggleState();
+                        clickedSwitch.updateImage();
+                    } else if(focusedActor instanceof Button) {
+                        Button clickedButton = (Button) focusedActor;
+                        clickedButton.onClick();
+                    }
                 }
             }
+        }
+        
+        // Update layout block activation (every n ticks)
+        if((++tickCounter) % 16 == 0) {
+            getObjects(Curve.class).forEach(t -> t.updateImage());
+            getObjects(TrackStraight.class).forEach(t -> t.updateImage());
+            getObjects(Turnout.class).forEach(t -> t.updateImage());
         }
     }
     
@@ -140,6 +154,13 @@ public class PanelWorld extends World
         addObject(curve7,5,7);
         Curve curve8 = new Curve(CurveType.TOP_LEFT);
         addObject(curve8,10,7);
+        
+        ButtonGo buttonGo = new ButtonGo("S3");
+        addObject(buttonGo,1,9);
+        ButtonStop buttonStop = new ButtonStop("S3");
+        addObject(buttonStop,3,9);
+        ButtonChangeDirections buttonChangeDirections = new ButtonChangeDirections("S3");
+        addObject(buttonChangeDirections,2,9);
     }
        
 }
