@@ -20,6 +20,8 @@ public class ButtonChangeDirections extends Button
     @Override
     public void onClick() {
         doAsync(() -> {
+            JMRI.getInterface().invertMovingDirection(locomotiveSystemName);
+            /*
             // remember current speed, then break
             int oldSpeed = JMRI.getInterface().getSpeed(locomotiveSystemName);
             JMRI.getInterface().setSpeed(locomotiveSystemName, 0);
@@ -37,6 +39,7 @@ public class ButtonChangeDirections extends Button
                
             // revert old speed
             JMRI.getInterface().setSpeed(locomotiveSystemName, oldSpeed);
+            */
         });        
     }
     
