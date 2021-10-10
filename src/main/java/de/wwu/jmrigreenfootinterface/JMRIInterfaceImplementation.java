@@ -2,6 +2,7 @@ package de.wwu.jmrigreenfootinterface;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -11,6 +12,11 @@ import de.wwu.jmrigreenfootinterface.items.MovingDirection;
 import de.wwu.jmrigreenfootinterface.net.WebSocketClient;
 import de.wwu.jmrigreenfootinterface.net.WiThrottleClient;
 
+/**
+ * Die Implementierung des JMRIInterface
+ * 
+ * @author Leonard Bienbeck
+ */
 public class JMRIInterfaceImplementation implements JMRIInterface {
 
 	public static String WEBSERVER_HOST;
@@ -22,6 +28,10 @@ public class JMRIInterfaceImplementation implements JMRIInterface {
 	private WebSocketClient webClient;
 	private WiThrottleClient throttleClient;
 	
+	/**
+	 * Initialisation of one client for each of the JMRI WebServer and the JMRI
+	 * WiThrottleServer in order to be able to exchange data with them later.
+	 */
 	public JMRIInterfaceImplementation() {
 		loadNetworkConfig();
 		
@@ -29,6 +39,10 @@ public class JMRIInterfaceImplementation implements JMRIInterface {
 		throttleClient = new WiThrottleClient(WITHROTTLESERVER_HOST, WITHROTTLESERVER_PORT);
 	}
 	
+	/**
+	 * Loads the network configuration via the ConfigIO class from the JSON
+	 * configuration file in the resource directory
+	 */
 	private void loadNetworkConfig() {
 		JSONObject networkConfig = (JSONObject) ConfigIO.getInstance().get("network");
 		JSONObject webserverConfig = networkConfig.getJSONObject("webserver");
@@ -120,8 +134,8 @@ public class JMRIInterfaceImplementation implements JMRIInterface {
 	// ============ JMRI WiThrottle functions section ============
 
 	private final String THROTTLE_ID = "T";
-	private int lastReceivedSpeed = 0;
-	private MovingDirection lastReceivedMovingDirection = MovingDirection.FORWARD;
+	private HashMap<String, Integer> lastReceivedTrainSpeeds = new HashMap<>();
+	private HashMap<String, MovingDirection> lastReceivedTrainDirections = new HashMap<>();
 	
 	@Override
 	public void addLocomotive(String locomotiveReference, String address) {
@@ -160,17 +174,26 @@ public class JMRIInterfaceImplementation implements JMRIInterface {
 
 	@Override
 	public MovingDirection getMovingDirection(String locomotiveReference) {
+		// the prefix of the expected result string
+		String queryResultPrefix = "M" + THROTTLE_ID + "A" + locomotiveReference;
+		// send the command, receive the results
 		String[] queryResults = sendCommand("A", locomotiveReference, "<;>", "qR");
-		processQueryResults(queryResults, "M" + THROTTLE_ID + "A" + locomotiveReference);
-		return lastReceivedMovingDirection;
+		// process all the results
+		processQueryResults(queryResults, queryResultPrefix);
+		// return the relevant result
+		return lastReceivedTrainDirections.get(queryResultPrefix);
 	}
 
 	@Override
 	public int getSpeed(String locomotiveReference) {
-		// query current speed of the locomotive
+		// the prefix of the expected result string
+		String queryResultPrefix = "M" + THROTTLE_ID + "A" + locomotiveReference;
+		// send the command, receive the results
 		String[] queryResults = sendCommand("A", locomotiveReference, "<;>", "qV");
-		processQueryResults(queryResults, "M" + THROTTLE_ID + "A" + locomotiveReference);
-		return lastReceivedSpeed;
+		// process all the results
+		processQueryResults(queryResults, queryResultPrefix);
+		// return the relevant result
+		return lastReceivedTrainSpeeds.get(queryResultPrefix);
 	}
 
 	@Override
@@ -184,6 +207,12 @@ public class JMRIInterfaceImplementation implements JMRIInterface {
 		setMovingDirection(locomotiveReference, oldDirection == MovingDirection.FORWARD ? MovingDirection.REVERSE : MovingDirection.FORWARD);
 	}
 	
+	/**
+	 * Sends a command to the WiThrottle server and receives its response.
+	 * 
+	 * @param commandStrings The strings from which the command is composed
+	 * @return The (possibly multi-part) response of the server
+	 */
 	private String[] sendCommand(String... commandStrings) {
 		// build command string
 		StringBuilder builder = new StringBuilder();
@@ -209,21 +238,29 @@ public class JMRIInterfaceImplementation implements JMRIInterface {
 		return null;
 	}
 	
+	/**
+	 * Processes the given (possibly multi-part) response from the server. If
+	 * information on the direction of travel or speed of a specific locomotive
+	 * identified by the prefix is included, this information is cached.
+	 * 
+	 * @param queryResults  The (possibly multi-part) response from the server
+	 * @param messagePrefix A prefix used to identify the locomotive to which
+	 *                      information is being received.
+	 */
 	private void processQueryResults(String[] queryResults, String messagePrefix) {
 		// for each part of the (possibly) multi-part result...
 		for(String singleResult : queryResults) {
 			
 			// read and store direction information
 			if(singleResult.contains(messagePrefix + "<;>R")) {
-				lastReceivedMovingDirection = singleResult.substring(singleResult.indexOf("<;>R") + 4).equalsIgnoreCase("0") ? MovingDirection.REVERSE : MovingDirection.FORWARD;
+				lastReceivedTrainDirections.put(messagePrefix, singleResult.substring(singleResult.indexOf("<;>R") + 4).equalsIgnoreCase("0") ? MovingDirection.REVERSE : MovingDirection.FORWARD);
 				
 			// read and store speed information
 			} else if(singleResult.contains(messagePrefix + "<;>V")) {
-				lastReceivedSpeed = Integer.valueOf(singleResult.substring(singleResult.indexOf("<;>V") + 4));
+				lastReceivedTrainSpeeds.put(messagePrefix, Integer.valueOf(singleResult.substring(singleResult.indexOf("<;>V") + 4)));
 				
 			}
 			
 		}
 	}
-
 }
