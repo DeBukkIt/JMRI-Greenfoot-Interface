@@ -119,7 +119,9 @@ public class JMRIInterfaceImplementation implements JMRIInterface {
 	
 	// ============ JMRI WiThrottle functions section ============
 
-	private final String THROTTLE_ID = "T"; 
+	private final String THROTTLE_ID = "T";
+	private int lastReceivedSpeed = 0;
+	private MovingDirection lastReceivedMovingDirection = MovingDirection.FORWARD;
 	
 	@Override
 	public void addLocomotive(String locomotiveReference, String address) {
@@ -158,24 +160,17 @@ public class JMRIInterfaceImplementation implements JMRIInterface {
 
 	@Override
 	public MovingDirection getMovingDirection(String locomotiveReference) {
-		String[] queryResult = sendCommand("A", locomotiveReference, "<;>", "qR");
-		String result = findMessageByPrefix(queryResult, "M" + THROTTLE_ID + "A" + locomotiveReference + "<;>R");
-		result = result.substring(result.length() - 1);
-		return result.equals("0") ? MovingDirection.REVERSE : MovingDirection.FORWARD;
+		String[] queryResults = sendCommand("A", locomotiveReference, "<;>", "qR");
+		processQueryResults(queryResults, "M" + THROTTLE_ID + "A" + locomotiveReference);
+		return lastReceivedMovingDirection;
 	}
 
 	@Override
 	public int getSpeed(String locomotiveReference) {
 		// query current speed of the locomotive
-		String[] queryResult = sendCommand("A", locomotiveReference, "<;>", "qV");
-		String result = findMessageByPrefix(queryResult, "M" + THROTTLE_ID + "A" + locomotiveReference + "<;>V");
-		// in case an error occured during query, return -1
-		if(result == null) {
-			return -1;
-		}
-		// else return the result as integer
-		result = result.substring(result.indexOf("<;>V") + 4);
-		return Integer.valueOf(result);
+		String[] queryResults = sendCommand("A", locomotiveReference, "<;>", "qV");
+		processQueryResults(queryResults, "M" + THROTTLE_ID + "A" + locomotiveReference);
+		return lastReceivedSpeed;
 	}
 
 	@Override
@@ -185,30 +180,28 @@ public class JMRIInterfaceImplementation implements JMRIInterface {
 
 	@Override
 	public void invertMovingDirection(String locomotiveReference) {
-		int oldSpeed = getSpeed(locomotiveReference);
-		doEmergencyStop(locomotiveReference);
 		MovingDirection oldDirection = getMovingDirection(locomotiveReference);
 		setMovingDirection(locomotiveReference, oldDirection == MovingDirection.FORWARD ? MovingDirection.REVERSE : MovingDirection.FORWARD);
-		setSpeed(locomotiveReference, oldSpeed);
 	}
 	
 	private String[] sendCommand(String... commandStrings) {
+		// build command string
 		StringBuilder builder = new StringBuilder();
 		for(String s : commandStrings) {
 			builder.append(s);
 		}
 		try {
 //			throttleClient.send("M" + THROTTLE_ID + builder.toString());
-//			return throttleClient.receive();
+//			return throttleClient.receive(500);
 			
 			// \/ BEGIN OF DEBUG \/
 			String cmd = "M" + THROTTLE_ID + builder.toString();
 			System.out.println("\n>>" + cmd);
 			throttleClient.send(cmd);
-			String debugStrings[] = throttleClient.receive();
+			String debugStrings[] = throttleClient.receive(500);
 			System.out.println("<< " + Arrays.toString(debugStrings) + "\n");
 			return debugStrings;
-			// ^^ END OF DEBUG ^^
+			// /\ END OF DEBUG /\
 			
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -216,18 +209,21 @@ public class JMRIInterfaceImplementation implements JMRIInterface {
 		return null;
 	}
 	
-	private String findMessageByPrefix(String[] serverMessages, String prefix) {
-		if(serverMessages == null) {
-			return null;
-		}
-		
-		// find prefix in all messages and return line
-		for(String s : serverMessages) {
-			if(s.startsWith(prefix)) {
-				return s;
+	private void processQueryResults(String[] queryResults, String messagePrefix) {
+		// for each part of the (possibly) multi-part result...
+		for(String singleResult : queryResults) {
+			
+			// read and store direction information
+			if(singleResult.contains(messagePrefix + "<;>R")) {
+				lastReceivedMovingDirection = singleResult.substring(singleResult.indexOf("<;>R") + 4).equalsIgnoreCase("0") ? MovingDirection.REVERSE : MovingDirection.FORWARD;
+				
+			// read and store speed information
+			} else if(singleResult.contains(messagePrefix + "<;>V")) {
+				lastReceivedSpeed = Integer.valueOf(singleResult.substring(singleResult.indexOf("<;>V") + 4));
+				
 			}
+			
 		}
-		return null;
 	}
 
 }

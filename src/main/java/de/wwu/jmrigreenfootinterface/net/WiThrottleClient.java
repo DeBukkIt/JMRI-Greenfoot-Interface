@@ -53,21 +53,17 @@ public class WiThrottleClient {
 		
 		// send this client's name
 		send("N" + clientName);
-		String[] welcomeMsgLines = receive();
+		String[] welcomeMsgLines = receive(500);
 		// start heart for sending heartbeats at demanded rate
 		startHeart(welcomeMsgLines);
 		
 		// send this client's unique ID
 		send("HU" + clientUuid);
-		receive();
+		receive(100);
 	}
 
 	private void maintainConnection() throws IOException {
-		if(socket != null) {
-			if(!socket.isConnected() || socket.isClosed()) {
-				connect();
-			}
-		} else {
+		if(socket == null || (!socket.isConnected() || socket.isClosed())) {
 			connect();
 		}
 	}
@@ -81,7 +77,7 @@ public class WiThrottleClient {
 		
 		// send QUIT command
 		send("Q");
-		receive();
+		receive(10);
 		
 		// close streams and socket
 		try {
@@ -101,8 +97,11 @@ public class WiThrottleClient {
 		}
 	}
 	
-	public String[] receive() throws IOException {
+	public String[] receive(long delayInMs) throws IOException {
 		maintainConnection();
+		
+		// give the server a chance to make calculations before expecting it to send something
+		sleep(delayInMs); // milliseconds
 		
 		// allocate space to receive lines from server
 		List<String> result = new ArrayList<>();
@@ -179,6 +178,10 @@ public class WiThrottleClient {
 	
 	private void stopHeart() {
 		heartActive = false;
+	}
+	
+	private void sleep(long ms) {
+		try { Thread.sleep(ms); } catch (InterruptedException e) {}
 	}
 	
 }
