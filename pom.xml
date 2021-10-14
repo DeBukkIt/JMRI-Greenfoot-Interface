@@ -33,9 +33,15 @@
 	  	  </descriptorRefs>
 	  	</configuration>
 	  </plugin>
-    </plugins>
+	  <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>3.3.1</version>
+        <configuration>
+        </configuration>
+      </plugin>
+	</plugins>
   </build>
-  
   <dependencies>
 	<!-- https://mvnrepository.com/artifact/javax.websocket/javax.websocket-all -->
 	<dependency>
