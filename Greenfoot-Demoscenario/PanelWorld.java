@@ -1,5 +1,7 @@
 import greenfoot.*;  // (World, Actor, GreenfootImage, Greenfoot und MouseInfo)
 import de.wwu.jmrigreenfootinterface.items.*;
+import java.util.List;
+import java.util.ArrayList;
 
 /**
  * Eine Welt, in der das Schema einer Modelleisenbahn (Panel) nachgebildet werden kann.
@@ -58,6 +60,34 @@ public class PanelWorld extends World
             getObjects(TrackStraight.class).forEach(t -> t.updateImage());
             getObjects(Turnout.class).forEach(t -> t.updateImage());
         }
+        
+        // Write names of trains onto layout blocks
+        printTrainIds();
+    }
+    
+    private void printTrainIds() {
+        List<TrackStraight> tracksA = getObjects(TrackStraight.class);
+        List<Curve>         tracksB = getObjects(Curve.class);
+        List<Turnout>       tracksC = getObjects(Turnout.class);
+        
+        List<Track> tracks = new ArrayList<>();
+        tracks.addAll(tracksA);
+        tracks.addAll(tracksB);
+        tracks.addAll(tracksC);
+        
+        // TODO for every occupied layout block do...
+            // TODO filter tracks to match iterated layout block
+            double centroidX = 0.0d;
+            double centroidY = 0.0d;
+            for(Track t : tracks) {
+                centroidX += t.getX();
+                centroidY += t.getY();
+            }
+            centroidX = centroidX / tracks.size();
+            centroidY = centroidY / tracks.size();
+        
+            System.out.println(centroidX + ", " + centroidY);
+        // --
     }
     
     private void paintBackgroundGrid() {
