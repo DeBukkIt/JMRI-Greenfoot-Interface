@@ -1,4 +1,5 @@
 import greenfoot.*;  // (World, Actor, GreenfootImage, Greenfoot und MouseInfo)
+import java.net.ConnectException;
 
 /**
  * Repräsentiert eine Gleis-Kurve

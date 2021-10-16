@@ -1,5 +1,6 @@
 import greenfoot.*;  // (World, Actor, GreenfootImage, Greenfoot und MouseInfo)
 import de.wwu.jmrigreenfootinterface.*;
+import java.net.ConnectException;
 
 /**
  * Gepräsentiert ein Stück Gleis

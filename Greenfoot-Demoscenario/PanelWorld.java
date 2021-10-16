@@ -184,13 +184,17 @@ public class PanelWorld extends World
         addObject(curve7,5,7);
         Curve curve8 = new Curve(CurveType.TOP_LEFT);
         addObject(curve8,10,7);
-        
+
         ButtonGo buttonGo = new ButtonGo("S3");
         addObject(buttonGo,1,9);
         ButtonStop buttonStop = new ButtonStop("S3");
         addObject(buttonStop,3,9);
         ButtonChangeDirections buttonChangeDirections = new ButtonChangeDirections("S3");
         addObject(buttonChangeDirections,2,9);
+        ButtonHorn buttonHorn = new ButtonHorn("S3");
+        addObject(buttonHorn,5,9);
+        ButtonScript buttonScript = new ButtonScript("S3");
+        addObject(buttonScript,5,10);
     }
        
 }
