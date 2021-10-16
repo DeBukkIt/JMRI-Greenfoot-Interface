@@ -9,6 +9,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import de.wwu.jmrigreenfootinterface.items.MovingDirection;
+import de.wwu.jmrigreenfootinterface.items.OccupationState;
 import de.wwu.jmrigreenfootinterface.net.WebSocketClient;
 import de.wwu.jmrigreenfootinterface.net.WiThrottleClient;
 
@@ -129,6 +130,74 @@ public class JMRIInterfaceImplementation implements JMRIInterface {
 			e.printStackTrace();
 		}
 		return false;
+	}
+	
+	private Thread layoutBlockListenerThread = null;
+	private HashMap<String, String> layoutBlockOccupations = null;
+	
+	@Override
+	public JSONObject getTrainOnLayoutBlock(String layoutBlockName) {
+		// initialize layout block occupation map, if necessary
+		if(layoutBlockOccupations == null) {
+			layoutBlockOccupations = new HashMap<>();
+		}
+		
+		// start layout block listener thread to stay informed about layout block
+		// occupation updated, if necessary
+		if (layoutBlockListenerThread == null || !layoutBlockListenerThread.isAlive()) {
+			startLayoutBlockOccupationListenerThread();
+		}
+
+		// return current occupation information, if known
+		if(!layoutBlockOccupations.containsKey(layoutBlockName)) {
+			return null;
+		}
+		return getItem("rosterEntry", layoutBlockOccupations.get(layoutBlockName));
+	}
+	
+	private void startLayoutBlockOccupationListenerThread() {
+		layoutBlockListenerThread = new Thread(() -> {
+			do {
+				// request layout block reporters
+				JSONArray reporters = getType("reporters");
+				// for every reporter...
+				for(int i = 0; i < reporters.length(); i++) {
+					// request its name and report
+					String blockName = reporters.getJSONObject(i).getJSONObject("data").getString("name");
+					String report = "";
+					if(!reporters.getJSONObject(i).getJSONObject("data").isNull("report")) {
+						report = reporters.getJSONObject(i).getJSONObject("data").getString("report");
+					}
+					
+					// set occupation state depending on report
+					OccupationState state = report.isEmpty() ? OccupationState.UNKNOWN : (report.endsWith("exits") ? OccupationState.UNOCCUPIED : OccupationState.OCCUPIED);
+					
+					// query train name depending on occupation state
+					if(state == OccupationState.OCCUPIED) {
+						String dccAddress = report.substring(0, report.indexOf(" "));
+						// get all roster entries
+						JSONArray rosterEntries = getType("rosterEntry");
+						// filter using reported DCC address
+						for(int k = 0; k < rosterEntries.length(); k++) {
+							// if the dcc address of the iterated train matches the reported address, add the trains customized name to the layoutBlockOccupations map
+							if(rosterEntries.getJSONObject(k).getJSONObject("data").getString("address").equals(dccAddress)) {
+								layoutBlockOccupations.put(blockName, rosterEntries.getJSONObject(k).getJSONObject("data").getString("name"));
+							}
+						}
+					} else {
+						// remove unoccupied (or unknown state) layout blocks from the occupation list
+						layoutBlockOccupations.remove(blockName);
+					}
+					
+				}
+				
+				// sleep
+				try {
+					Thread.sleep(200); // TODO make this configurable using the config file
+				} catch (InterruptedException e) {} 
+			} while(true);
+		});
+		layoutBlockListenerThread.start();
 	}
 	
 	// ============ JMRI WiThrottle functions section ============

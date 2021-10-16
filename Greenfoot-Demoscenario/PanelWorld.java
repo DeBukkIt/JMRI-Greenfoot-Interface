@@ -1,4 +1,5 @@
 import greenfoot.*;  // (World, Actor, GreenfootImage, Greenfoot und MouseInfo)
+import de.wwu.jmrigreenfootinterface.JMRI;
 import de.wwu.jmrigreenfootinterface.items.*;
 import java.util.List;
 import java.util.ArrayList;
@@ -59,10 +60,12 @@ public class PanelWorld extends World
             getObjects(Curve.class).forEach(t -> t.updateImage());
             getObjects(TrackStraight.class).forEach(t -> t.updateImage());
             getObjects(Turnout.class).forEach(t -> t.updateImage());
+            
+            // Write names of trains onto layout blocks
+            printTrainIds();
+            //System.out.println(JMRI.getInterface().getTrainOnLayoutBlock("IRreporter1"));
         }
         
-        // Write names of trains onto layout blocks
-        printTrainIds();
     }
     
     private void printTrainIds() {
@@ -75,6 +78,8 @@ public class PanelWorld extends World
         tracks.addAll(tracksB);
         tracks.addAll(tracksC);
         
+        // TODO get list of occupied layout blocks
+        
         // TODO for every occupied layout block do...
             // TODO filter tracks to match iterated layout block
             double centroidX = 0.0d;
@@ -85,8 +90,8 @@ public class PanelWorld extends World
             }
             centroidX = centroidX / tracks.size();
             centroidY = centroidY / tracks.size();
-        
-            System.out.println(centroidX + ", " + centroidY);
+            
+            // TODO print train name at center of layout block track tiles
         // --
     }
     

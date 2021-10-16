@@ -26,6 +26,10 @@ public abstract class Track extends Actor
         this.layoutBlockId = layoutBlockId;
     }
     
+    public String getLayoutBlock() {
+        return layoutBlockId;
+    }
+    
     protected boolean isBlockActive() {
         if(layoutBlockId == null || layoutBlockId.isEmpty()) {
             return false;

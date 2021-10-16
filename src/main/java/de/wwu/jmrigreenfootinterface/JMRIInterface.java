@@ -69,6 +69,17 @@ public interface JMRIInterface {
 	 */
 	public boolean setProperty(String type, String itemName, String propertyName, Object value);
 
+	/**
+	 * Attempts to identify the train that is currently on the given layout block.
+	 * If this fails, for example because there currently is no train on that block
+	 * or for other reasons, null is returned.
+	 * 
+	 * @param layoutBlockName The name of the layout block
+	 * @return The data of the train currently on the layout block as JSONObject;
+	 *         null if no such train can be identified.
+	 */
+	public JSONObject getTrainOnLayoutBlock(String layoutBlockName);
+	
 	// JMRI WiThrottle functions
 
 	/**
