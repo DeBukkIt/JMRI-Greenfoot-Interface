@@ -10,8 +10,8 @@ import java.net.ConnectException;
  */
 public abstract class Track extends Actor
 {   
-    protected String layoutBlockId = "";
-    protected String imageBaseName = "";
+    protected String layoutBlockId = null;
+    protected String imageBaseName = null;
     
     public Track(String imageBaseName) {
         this(imageBaseName, null);

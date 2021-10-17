@@ -3,6 +3,9 @@ import de.wwu.jmrigreenfootinterface.JMRI;
 import de.wwu.jmrigreenfootinterface.items.*;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Set;
+import java.util.HashSet;
+import org.json.JSONObject;
 
 /**
  * Eine Welt, in der das Schema einer Modelleisenbahn (Panel) nachgebildet werden kann.
@@ -62,37 +65,74 @@ public class PanelWorld extends World
             getObjects(Turnout.class).forEach(t -> t.updateImage());
             
             // Write names of trains onto layout blocks
-            printTrainIds();
+            displayTrainIds();
             //System.out.println(JMRI.getInterface().getTrainOnLayoutBlock("IRreporter1"));
         }
         
     }
     
-    private void printTrainIds() {
+    private void displayTrainIds() {
         List<TrackStraight> tracksA = getObjects(TrackStraight.class);
         List<Curve>         tracksB = getObjects(Curve.class);
         List<Turnout>       tracksC = getObjects(Turnout.class);
         
-        List<Track> tracks = new ArrayList<>();
-        tracks.addAll(tracksA);
-        tracks.addAll(tracksB);
-        tracks.addAll(tracksC);
+        List<Track> allTracks = new ArrayList<>();
+        allTracks.addAll(tracksA);
+        allTracks.addAll(tracksB);
+        allTracks.addAll(tracksC);
         
-        // TODO get list of occupied layout blocks
-        
-        // TODO for every occupied layout block do...
-            // TODO filter tracks to match iterated layout block
-            double centroidX = 0.0d;
-            double centroidY = 0.0d;
-            for(Track t : tracks) {
-                centroidX += t.getX();
-                centroidY += t.getY();
+        // generate set of layout blocks associated with the tracks
+        Set<String> layoutBlockNames = new HashSet<>();
+        for(Track t : allTracks) {
+            if(t != null && t.getLayoutBlock() != null) {
+                layoutBlockNames.add(t.getLayoutBlock());
             }
-            centroidX = centroidX / tracks.size();
-            centroidY = centroidY / tracks.size();
+        }
+        
+        // for every layout block...
+        for(String layoutBlockName : layoutBlockNames) {
+            // 1. query name of occupying train
+            JSONObject queryResult = JMRI.getInterface().getTrainOnLayoutBlock(layoutBlockName);
+            // no such train on this layout block?
+            // --> continue with next layout block
+            if(queryResult == null || queryResult.isEmpty() || !queryResult.has("data") || !queryResult.getJSONObject("data").has("name")) {
+                continue;
+            } // else (implicit)
+            String trainName = queryResult.getJSONObject("data").getString("name");
             
-            // TODO print train name at center of layout block track tiles
-        // --
+            // 2. get all the tracks belonging to that layout block
+            List<Track> tracksBelongingToBlock = new ArrayList<>();
+            for(Track t : allTracks) {
+                if(t.getLayoutBlock().equals(layoutBlockName)) {
+                    tracksBelongingToBlock.add(t);
+                }
+            }
+            
+            // 3. calculate centroid of all the tracks belonging to the layout block
+            Centroid centroid = calculateCentroid(tracksBelongingToBlock);
+            
+            // 4. display train name as string at centroid
+            getBackground().drawString(trainName, (int) centroid.x, (int) centroid.y);
+        }
+    }
+    
+    private Centroid calculateCentroid(List<Track> tracks) {
+        double centroidX = 0.0d;
+        double centroidY = 0.0d;
+        for(Track t : tracks) {
+            centroidX += t.getX();
+            centroidY += t.getY();
+        }
+        return new Centroid(centroidX / (double) tracks.size(), centroidY / (double) tracks.size());
+    }
+    
+    private class Centroid {
+        double x, y;
+        
+        protected Centroid(double x, double y) {
+            this.x = x;
+            this.y = y;
+        }
     }
     
     private void paintBackgroundGrid() {
@@ -108,21 +148,21 @@ public class PanelWorld extends World
     }
     
     private void prepare() {
-        TrackStraight trackStraight0 = new TrackStraight(StraightType.HORIZONTAL);
+        TrackStraight trackStraight0 = new TrackStraight(StraightType.HORIZONTAL, "IBblock1");
         addObject(trackStraight0,4,1); 
-        TrackStraight trackStraight1 = new TrackStraight(StraightType.HORIZONTAL);
+        TrackStraight trackStraight1 = new TrackStraight(StraightType.HORIZONTAL, "IBblock1");
         addObject(trackStraight1,5,1);        
-        TrackStraight trackStraight2 = new TrackStraight(StraightType.HORIZONTAL);
+        TrackStraight trackStraight2 = new TrackStraight(StraightType.HORIZONTAL, "IBblock1");
         addObject(trackStraight2,6,1);
-        TrackStraight trackStraight3 = new TrackStraight(StraightType.HORIZONTAL);
+        TrackStraight trackStraight3 = new TrackStraight(StraightType.HORIZONTAL, "IBblock1");
         addObject(trackStraight3,7,1);
-        TrackStraight trackStraight4 = new TrackStraight(StraightType.HORIZONTAL);
+        TrackStraight trackStraight4 = new TrackStraight(StraightType.HORIZONTAL, "IBblock1");
         addObject(trackStraight4,8,1);
-        TrackStraight trackStraight5 = new TrackStraight(StraightType.HORIZONTAL);
+        TrackStraight trackStraight5 = new TrackStraight(StraightType.HORIZONTAL, "IBblock1");
         addObject(trackStraight5,9,1);
-        TrackStraight trackStraight6 = new TrackStraight(StraightType.HORIZONTAL);
+        TrackStraight trackStraight6 = new TrackStraight(StraightType.HORIZONTAL, "IBblock1");
         addObject(trackStraight6,10,1);
-        TrackStraight trackStraight7 = new TrackStraight(StraightType.HORIZONTAL);
+        TrackStraight trackStraight7 = new TrackStraight(StraightType.HORIZONTAL, "IBblock1");
         addObject(trackStraight7,11,1);
 
         TrackStraight trackStraight20 = new TrackStraight(StraightType.HORIZONTAL);
