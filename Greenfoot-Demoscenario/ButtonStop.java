@@ -2,23 +2,31 @@ import greenfoot.*;  // (World, Actor, GreenfootImage, Greenfoot und MouseInfo)
 import de.wwu.jmrigreenfootinterface.*;
 
 /**
- * Ergänzen Sie hier eine Beschreibung für die Klasse ButtonStop.
+ * A button to stop a certain train.
  * 
- * @author (Ihr Name) 
- * @version (eine Versionsnummer oder ein Datum)
+ * @author Leonard Bienbeck 
+ * @version 1.0.0
  */
 public class ButtonStop extends Button
 {
 
+    /**
+     * The name assigned to the locomotive in the JMRI system.
+     */
     private String locomotiveSystemName = "";
     
+    /**
+     * Creates a button to stop the train identified by the given name.
+     * 
+     * @param locomotiveSystemName The name of the train
+     */    
     public ButtonStop(String locomotiveSystemName) {
         this.locomotiveSystemName = locomotiveSystemName;
     }
     
     @Override
     public void onClick() {
-        JMRI.getInterface().doEmergencyStop(locomotiveSystemName);
+        JMRI.getInterface().setSpeed(locomotiveSystemName, 0);
     }   
     
 }

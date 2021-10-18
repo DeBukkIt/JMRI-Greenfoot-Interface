@@ -3,16 +3,25 @@ import de.wwu.jmrigreenfootinterface.*;
 import de.wwu.jmrigreenfootinterface.items.*;
 
 /**
- * Ergänzen Sie hier eine Beschreibung für die Klasse ButtonChangeDirections.
+ * A button that changes the direction of travel of a train.
  * 
- * @author (Ihr Name) 
- * @version (eine Versionsnummer oder ein Datum)
+ * @author Leonard Bienbeck 
+ * @version 1.0.0
  */
 public class ButtonChangeDirections extends Button
 {
 
+    /**
+     * The name assigned to the locomotive in the JMRI system.
+     */
     private String locomotiveSystemName = "";
     
+    /**
+     * Creates a button to change the direction of travel of the train identified
+     * by the given name.
+     * 
+     * @param locomotiveSystemName The name of the train
+     */
     public ButtonChangeDirections(String locomotiveSystemName) {
         this.locomotiveSystemName = locomotiveSystemName;
     }

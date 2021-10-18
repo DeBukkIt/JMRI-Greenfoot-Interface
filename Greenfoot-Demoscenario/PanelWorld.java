@@ -8,7 +8,8 @@ import java.util.HashSet;
 import org.json.JSONObject;
 
 /**
- * Eine Welt, in der das Schema einer Modelleisenbahn (Panel) nachgebildet werden kann.
+ * A world in which the scheme of a model railway (panel) can be imitated.
+ * It also provides buttons to control the railway.
  * 
  * @author Leonard Bienbeck
  * @version 1.0.0
@@ -16,11 +17,15 @@ import org.json.JSONObject;
 public class PanelWorld extends World
 {
     
+    /**
+     * Counts how often the Act method is called to perform certain functionality
+     * only every n such calls.
+     */
     int tickCounter = -1;
     
     /**
-     * Konstruktor für Objekte der Klasse PanelWorld
-     * 
+     * Constructs the world with a fixed number of cells visually delineated by a faint
+     * greyish background grid. In addition, the objects placed in the world are initialised.
      */
     public PanelWorld()
     {    
@@ -47,6 +52,7 @@ public class PanelWorld extends World
         */
     }
     
+    @Override
     public void act() {        
         // Clicks on turnouts
         if(Greenfoot.getMouseInfo() != null) {
@@ -78,7 +84,11 @@ public class PanelWorld extends World
         
     }
     
+    /**
+     * Write the names of the trains near the layout blocks they currently occupy.
+     */
     private void displayTrainIds() {
+        // collect all kinds of tracks in a single list
         List<TrackStraight> tracksA = getObjects(TrackStraight.class);
         List<Curve>         tracksB = getObjects(Curve.class);
         List<Turnout>       tracksC = getObjects(Turnout.class);
@@ -88,13 +98,16 @@ public class PanelWorld extends World
         allTracks.addAll(tracksB);
         allTracks.addAll(tracksC);
         
-        // generate set of layout blocks associated with the tracks
+        // generate set of distinct layout blocks associated with the tracks
         Set<String> layoutBlockNames = new HashSet<>();
         for(Track t : allTracks) {
             if(t != null && t.getLayoutBlock() != null) {
                 layoutBlockNames.add(t.getLayoutBlock());
             }
         }
+        
+        // clear background (delete old train names) before drawing the new names
+        clearBackground();
         
         // for every layout block...
         for(String layoutBlockName : layoutBlockNames) {
@@ -123,6 +136,13 @@ public class PanelWorld extends World
         }
     }
     
+    /**
+     * Calculates the 2D geometric centre of the tracks from the given list and returns the x and y coordinates as a Centroid object.
+     * 
+     * @param tracks A list of tracks whose centre point is to be calculated
+     * 
+     * @return The x and y coordinates of the 2D geometric centre of the tracks from the given list as a Centroid object
+     */
     private Centroid calculateCentroid(List<Track> tracks) {
         double centroidX = 0.0d;
         double centroidY = 0.0d;
@@ -133,15 +153,34 @@ public class PanelWorld extends World
         return new Centroid(centroidX / (double) tracks.size(), centroidY / (double) tracks.size());
     }
     
+    /**
+     * Represents a point in two-dimensional space whose x and y coordinates have a double resolution.
+     */
     private class Centroid {
-        double x, y;
+        /**
+         * The x coordinate of the Centroid
+         */
+        double x;
+        /**
+         * The y coordinate of the Centroid
+         */
+        double y;
         
+        /**
+         * Constructs a centroid object, i.e. a point in two-dimensional space determined by the given x and y coordinates.
+         * 
+         * @param x The x coordinate of the Centroid
+         * @param y The y coordinate of the Centroid
+         */
         protected Centroid(double x, double y) {
             this.x = x;
             this.y = y;
         }
     }
     
+    /**
+     * Draws a greyish background grid indicating the boundaries of the cells into which the world is divided.
+     */
     private void paintBackgroundGrid() {
         GreenfootImage bg = getBackground();
 
@@ -154,6 +193,9 @@ public class PanelWorld extends World
         }
     }
     
+    /**
+     * Initialises the objects to be displayed in the world and places them in it.
+     */
     private void prepare() {
         TrackStraight trackStraight0 = new TrackStraight(StraightType.HORIZONTAL, "IBblock1");
         addObject(trackStraight0,4,1); 
@@ -247,6 +289,19 @@ public class PanelWorld extends World
         addObject(buttonHorn,5,9);
         ButtonScript buttonScript = new ButtonScript("S3");
         addObject(buttonScript,5,10);
+    }
+    
+    /**
+     * Erases the displayed background of the world so that any drawn strings become invisible and redraws
+     * the background grid. The placed objects should also be visible again (or still visible) afterwards.
+     */
+    private void clearBackground() {
+        Color oldColor = getBackground().getColor();
+        getBackground().clear();
+        getBackground().setColor(Color.WHITE);
+        getBackground().fill();
+        paintBackgroundGrid();
+        getBackground().setColor(oldColor);
     }
        
 }

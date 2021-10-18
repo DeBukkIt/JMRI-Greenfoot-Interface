@@ -1,21 +1,29 @@
 import greenfoot.*;  // (World, Actor, GreenfootImage, Greenfoot und MouseInfo)
 
 /**
- * Ergänzen Sie hier eine Beschreibung für die Klasse Control.
+ * Represents abstract control elements, for example buttons, with which inputs
+ * can be made.
  * 
- * @author (Ihr Name) 
- * @version (eine Versionsnummer oder ein Datum)
+ * @author Leonard Bienbeck
+ * @version 1.0.0
  */
 public abstract class Control extends Actor
 {
-    
+    /**
+     * A thread on which asynchronous tasks can be performed that are started by
+     * the control elements.
+     */
     protected Thread controlThread = null;
     
+    /**
+     * Starts an asynchronous task by executing the given Runnable on a new thread.
+     */
     protected void doAsync(Runnable runnable) {
         controlThread = new Thread(runnable);
         controlThread.start();
     }
     
+    @Override
     public void act() 
     {
         // controls do not act

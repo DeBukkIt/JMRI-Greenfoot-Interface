@@ -2,16 +2,25 @@ import greenfoot.*;  // (World, Actor, GreenfootImage, Greenfoot und MouseInfo)
 import de.wwu.jmrigreenfootinterface.*;
 
 /**
- * Ergänzen Sie hier eine Beschreibung für die Klasse ButtonHorn.
+ * A button that lets the horn of a train play.
  * 
- * @author (Ihr Name) 
- * @version (eine Versionsnummer oder ein Datum)
+ * @author Leonard Bienbeck 
+ * @version 1.0.0
  */
 public class ButtonHorn extends Button
 {
 
+    /**
+     * The name assigned to the locomotive in the JMRI system.
+     */
     private String locomotiveSystemName = "";
     
+    /**
+     * Creates a button to play the horn of the train identified
+     * by the given name.
+     * 
+     * @param locomotiveSystemName The name of the train
+     */
     public ButtonHorn(String locomotiveSystemName) {
         this.locomotiveSystemName = locomotiveSystemName;
     }

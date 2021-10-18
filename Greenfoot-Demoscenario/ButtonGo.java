@@ -2,16 +2,24 @@ import greenfoot.*;  // (World, Actor, GreenfootImage, Greenfoot und MouseInfo)
 import de.wwu.jmrigreenfootinterface.*;
 
 /**
- * Ergänzen Sie hier eine Beschreibung für die Klasse ButtonGo.
+ * A button that sets a train in motion
  * 
- * @author (Ihr Name) 
- * @version (eine Versionsnummer oder ein Datum)
+ * @author Leonard Bienbeck 
+ * @version 1.0.0
  */
 public class ButtonGo extends Button
 {
 
+    /**
+     * The name assigned to the locomotive in the JMRI system.
+     */
     private String locomotiveSystemName = "";
     
+    /**
+     * Creates a button to make the train identified by the given name move.
+     * 
+     * @param locomotiveSystemName The name of the train
+     */
     public ButtonGo(String locomotiveSystemName) {
         this.locomotiveSystemName = locomotiveSystemName;
     }
