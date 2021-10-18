@@ -35,15 +35,24 @@ public abstract class Track extends Actor
             return false;
         }
         
-        int result = (int) JMRI.getInterface().getProperty("layoutBlocks", layoutBlockId, "state");
-        return result == 2 ? true : false;
+        try {
+            int result = (int) JMRI.getInterface().getProperty("layoutBlocks", layoutBlockId, "state");
+            return result == 2 ? true : false;
+        } catch(Exception e) {
+            return false;
+        }
     }
     
     public abstract void updateImage();
     
     @Override
     protected void addedToWorld(World world) {
-        updateImage();
+        // Uncomment the following line to display the state of the tracks even before starting the
+        // scenario via the Play or Act button. Attention: A connection with JMRI will then be
+        // attempted even before such a click. If this fails, error messages are displayed before
+        // the scenario has been started.
+        
+        //updateImage();
     }
     
     /**

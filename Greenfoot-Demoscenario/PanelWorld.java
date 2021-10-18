@@ -33,11 +33,18 @@ public class PanelWorld extends World
     
     @Override
     public void started() {
+        // Uncomment the following block to display the state of the turnouts even before starting the
+        // scenario via the Play or Act button. Attention: A connection with JMRI will then be
+        // attempted even before such a click. If this fails, error messages are displayed before
+        // the scenario has been started.
+        
+        /*
         getObjects(Turnout.class).forEach(t -> {
             TurnoutState s = t.getState();
             t.updateImage();
         });
         repaint();
+        */
     }
     
     public void act() {        
