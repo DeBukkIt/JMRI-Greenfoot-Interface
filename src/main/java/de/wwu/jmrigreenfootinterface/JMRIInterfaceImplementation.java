@@ -138,9 +138,11 @@ public class JMRIInterfaceImplementation implements JMRIInterface {
 	@Override
 	public JSONObject getTrainOnLayoutBlock(String layoutBlockName) {
 		// initialize layout block occupation map, if necessary
-		if(layoutBlockOccupations == null) {
-			layoutBlockOccupations = new HashMap<>();
-		}
+		synchronized (layoutBlockOccupations) {
+			if(layoutBlockOccupations == null) {
+				layoutBlockOccupations = new HashMap<>();
+			}
+		}		
 		
 		// start layout block listener thread to stay informed about layout block
 		// occupation updated, if necessary
@@ -148,13 +150,20 @@ public class JMRIInterfaceImplementation implements JMRIInterface {
 			startLayoutBlockOccupationListenerThread();
 		}
 
-		// return current occupation information, if known
-		if(!layoutBlockOccupations.containsKey(layoutBlockName)) {
-			return null;
+		synchronized (layoutBlockOccupations) {
+			// return current occupation information, if known
+			if(!layoutBlockOccupations.containsKey(layoutBlockName)) {
+				return null;
+			}
+			return getItem("rosterEntry", layoutBlockOccupations.get(layoutBlockName));
 		}
-		return getItem("rosterEntry", layoutBlockOccupations.get(layoutBlockName));
 	}
 	
+	/**
+	 * Starts a thread that polls the reporters of all layout blocks at short
+	 * intervals about their current state so that trains can be identified and
+	 * located on the track system.
+	 */
 	private void startLayoutBlockOccupationListenerThread() {
 		layoutBlockListenerThread = new Thread(() -> {
 			do {
@@ -177,18 +186,30 @@ public class JMRIInterfaceImplementation implements JMRIInterface {
 						String dccAddress = report.substring(0, report.indexOf(" "));
 						// get all roster entries
 						JSONArray rosterEntries = getType("rosterEntry");
+						
 						// filter using reported DCC address
 						for(int k = 0; k < rosterEntries.length(); k++) {
 							// if the dcc address of the iterated train matches the reported address, add the trains customized name to the layoutBlockOccupations map
 							if(rosterEntries.getJSONObject(k).getJSONObject("data").getString("address").equals(dccAddress)) {
-								layoutBlockOccupations.put(blockName, rosterEntries.getJSONObject(k).getJSONObject("data").getString("name"));
+								synchronized (layoutBlockOccupations) {
+									// add name to occupations map
+									String trainName = rosterEntries.getJSONObject(k).getJSONObject("data").getString("name");
+									layoutBlockOccupations.put(blockName, trainName);
+									
+									// remove the same train from other blocks, because trains can only occupy one block at a time
+									for(String key : layoutBlockOccupations.keySet()) {
+										if(!key.equals(blockName)) {
+											if(layoutBlockOccupations.get(key).equals(trainName)) {
+												layoutBlockOccupations.remove(blockName); // TODO Check if this is a concurrent modification
+											}
+										}
+									}
+								}
+								
+								break; // there should only be one train with a matching dcc address
 							}
 						}
-					} else {
-						// remove unoccupied (or unknown state) layout blocks from the occupation list
-						layoutBlockOccupations.remove(blockName);
-					}
-					
+					}					
 				}
 				
 				// sleep
