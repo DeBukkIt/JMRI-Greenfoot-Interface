@@ -55,13 +55,13 @@
 	<dependency>
 	    <groupId>org.json</groupId>
 	    <artifactId>json</artifactId>
-	    <version>20210307</version>
+	    <version>20240303</version>
 	</dependency>
 	<!-- https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api -->
 	<dependency>
 	    <groupId>org.junit.jupiter</groupId>
 	    <artifactId>junit-jupiter-api</artifactId>
-	    <version>5.8.0</version>
+	    <version>5.11.0-M1</version>
 	    <scope>test</scope>
 	</dependency>
   </dependencies>
